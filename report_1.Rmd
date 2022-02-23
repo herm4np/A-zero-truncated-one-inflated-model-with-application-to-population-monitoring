@@ -1,0 +1,87 @@
+---
+title: "report"
+author: "Herman Persson"
+date: "2/8/2022"
+output: html_document
+---
+---------------------------(UPPDATERAD PLAN)---------------------------
+
+Se på uppdelad data och sammanslagen om det verkar finnas tecken på "inflation" med hjälp av p-poisson.
+Upprepa steget innan med negativ binomial.
+Gör en uppskattning av björn populationens storlek med p-poisson. 
+Upprepa med negativ binomial.
+Vad innebär en inflation gällande säkerheten av skattningen. (bias och variation, se Martins projekteskrivelse)
+
+---------------------------(INNAN DOKUMENTATION)---------------------------
+
+I script_1 har skapat simplare simulering för att se på antalet "ghosts" som uppstår i de olika fördelningarna som har inflation.
+Jag har ingen större plan men ska nog se på de olika likelihood funktionerna och se ifall prior kan vara aktuellt eller inte.
+Ska jag bara maximera med ML?
+
+---------------------------(16/2)---------------------------
+
+Ska fråga martin idag om ett möte med han som arbetar med genidentifiering kanske inte är nödvändigt utan den enda frågan jag har 
+är ju egentligen om man har någon aning om hur "p" för fel kan vara fördelaat eller om det ens är möjligt. Kanske fråga om priori 
+fördelningar också, uppdaterar med svar nedan.
+
+Skriv ned fördelning för OIPP.
+
+Hittade lloipp_nocov för log likelihood av OIPP. Svår beräkning av fischer, går att hitta i "Estimation of population size..."
+artikeln.
+
+Har utforskat optim och optimise funktionerna för att maximera likelihooded. Exempel "optim(3, function(x) ((x)^2))". Kom ihåg
+att den hittar minimum så "vänd" grafen upp och ned.
+
+Möte:
+  Struktur av rapport:
+    Intruduktion: Vad gör vi, varför, vad har redan gjorts, vad är våran approach
+    Metod: Vilka verktyg använder vi, statistiska modeller och antaganden, hur skattar vi parametrar, kommer vi 
+           använda numeriska metoder
+    Resutat: Figurer och tabller, simulations resultat, applikation på data, vissa figurer placeras i appendix,
+             jämför med andra metoders resultat, ta bara med figurer som är relevanta för texten, endast
+             interessanta figurer i appendix
+    Diskussion: Vilka slutsatser kan vi dra ifrån resultat delen, vad kommer näst om man skulle fortsätta
+    Referenser: Använd funktionen citation(), MAN KAN FÅ TEXTEN PÅ GOOGLE SCHOLAR, BIBTEX. Spara i .bib fil
+    Appendix: Bilder och tabeller som inte refereras i texten, ha med kod till github repo där koden finns
+
+Kommer träffa genidentifierings killen nästa onsdag.
+
+---------------------------(18/2)---------------------------
+
+Ska börja med att se ifall det finns någon fischer funktion för OIPP. Hittar inte, läs på om projketet som functions filen kommer
+ifrån så jag fattar dom. 
+
+---------------------------(22/2)---------------------------
+
+Leker runt lite med maximering, borde kolla nogrannare på ll för oipp, se att funktionen jag har stämmer. Ändrar data får fortfarande
+bara 36?
+
+Behöver uppdatera planeringen!
+
+---------------------------(23/2)---------------------------
+
+Idag ska jag förbättra planen. Prata med Martin på mötet om hur man skattar två parametrar? Skapade funktion som används för optim 
+för att finna estimat av funktion med två parametrar. Exempel: 
+"optim(c(1,0), opt_lloipp_nocov, hessian = TRUE, lower = c(0,0), method = "L-BFGS-B")".
+
+Inför möte:
+  Dela github repo med Martin.
+  Fråga om "L-BFGS-B", vad innebär metoden? Visa eventuellt resultat av optim med gränser.
+  
+Möte:
+  Passa noll och etttrunkerad.
+  Gör val fokusera på metod eller data.
+  Kolla på cran paketet.
+
+
+
+
+
+
+
+
+
+
+
+
+
