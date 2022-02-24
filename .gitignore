@@ -39,4 +39,5 @@ vignettes/*.pdf
 .Renviron
 
 # extra
+
 .report_1.Rmd
