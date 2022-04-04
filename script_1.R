@@ -93,9 +93,30 @@ rpp <- function(n, lambda) {
 roipp <- function(n, lambda, p) {
   y <- rpp(n, lambda) %>% # generate sample without inflation
     map_df(~data.frame(y = .x, 
-                       real = rbinom(1, .x, (1 - p)))) %>%
+                       real = rbinom(1, .x, (1 - p)))) %>% # generate inflation
     mutate(ghosts = y - real)
-  ghosts = sum(y["ghosts"])
+  ghosts = sum(y["ghosts"]) # count total ghosts
+  y <- y %>% 
+    filter(real != 0) %>%
+    select(real) %>%
+    data.matrix %>%
+    array()
+  y = c(y, rep.int(1, ghosts))
+  return(y)
+}
+
+rztnb <- function(n, mu, size) {
+  y <- rnbinom(n, size, mu = mu)
+  y <- y[y!=0]
+  return(y)
+}
+
+roirztnb <- function(n, mu, size, p) {
+  y <- rztnb(n, mu, size) %>% # generate sample without inflation
+    map_df(~data.frame(y = .x, 
+                       real = rbinom(1, .x, (1 - p)))) %>% # generate inflation
+    mutate(ghosts = y - real)
+  ghosts = sum(y["ghosts"]) # count total ghosts
   y <- y %>% 
     filter(real != 0) %>%
     select(real) %>%
@@ -111,7 +132,7 @@ lloipp <- function(param, data = y) {
   lambda <- param[1]
   p <- param[2]
   theta <- lambda*(1 - p)
-  oemga <- 1/(1 + lambda*p)
+  omega <- 1/(1 + lambda*p)
   n1 <- sum(data==1)
   nm <- length(data) - n1
   sum_data_m <- sum(data) - n1
@@ -119,9 +140,6 @@ lloipp <- function(param, data = y) {
     nm*log(omega) + sum_data_m*log(theta) - nm*log(exp(theta) - 1) # log likelihood of non "1"s
   return(l)
 }
-
-#   -(n1*log(w + (1-w)*(la/(exp(la)-1))) + (n0-n1)*log(1-w) + (sum(y)-n1)*log(la) - 
-#     (n0-n1)*log(exp(la)-1) - sum(log(factorial(y))))
 
 llpp <- function(lambda, data = y) {
   l <- sum(data*log(lambda) - log(exp(lambda) - 1) - log(factorial(data)))
@@ -137,97 +155,107 @@ llotpp <- function(theta, data = y) {
 #OPT functions for optim/numerical maximization
 
 opt_lloipp <- function(param, data = y) {
-  return(-lloipp(param, data))
+  print(param)
+  if (0 <= param[1] & 0 <= param[2] & param[2] <= 1) { #likes to try values which creates error in likelihood even thought it is not supposed to see lower in oipp_ml_fit
+    return(-lloipp(param, data))
+  } else {
+    return(1e+100) # optim avoids non allowed values
+  }
 } 
 
 opt_llpp <- function(lambda, data = y) {
-  return(-llpp(lambda, data))
+  if (0 <= lambda) { 
+    return(-llpp(lambda, data))
+  } else {
+    return(1e+100)
+  }
 } 
 
 opt_llotpp <- function(theta, data = y) {
-  return(-llotpp(theta, data))
+  if (0 <= theta) { 
+    return(-llotpp(theta, data))
+  } else {
+    return(1e+100)
+  }
 } 
 
 #ml fitting
 
-oipp_ml_fit <- function(data = y, param = c(2, 0.5), hess = FALSE) {
-  ml <- optim(param, opt_lloipp, data = data, lower = c(1e-3, 0.01), upper = c(Inf, 0.99), hessian = hess, method = "L-BFGS-B")
-  return(ml)
+oipp_ml_fit <- function(data = y, param = c(2, 0.5)) {
+  ml <- optim(par = param, fn = opt_lloipp, data = data, lower = c(0, 0), upper = c(Inf, 1), hessian = TRUE, method = "L-BFGS-B") # use method to allow limits
+  return(list(par = ml$par, se = sqrt(diag(solve(ml$hessian)))))
 }
 
-pp_ml_fit <- function(data = y, param = 2, hess = FALSE) {
-  ml <- optim(param, opt_llpp, data = data, lower = 1e-3, hessian = hess, method = "L-BFGS-B")
-  return(ml)
+pp_ml_fit <- function(data = y, param = 2) {
+  ml <- optim(par = param, fn = opt_llpp, data = data, lower = 0, hessian = TRUE, method = "L-BFGS-B") 
+  return(list(par = ml$par, se = as.numeric(sqrt(1 / ml$hessian))))
 }
 
 otpp_ml_fit <- function(data = y, param = 2) {
-  ml <- optim(2, opt_llotpp, data = data, lower = 1e-3, hessian = TRUE, method = "L-BFGS-B")
+  ml <- optim(par = param, fn = opt_llotpp, data = data, lower = 0, hessian = TRUE, method = "L-BFGS-B")
   return(list(par = ml$par, se = as.numeric(sqrt(1 / ml$hessian))))
 }
 
 # Population estimation
 
-N_oipp <- function(param_ml_optim, data = y) {
-  theta_ml <- param_ml_optim
-  p_ml <- param_ml_optim
+N_oipp <- function(par, data = y) {
+  lambda <- par[1]
+  p <- par[2]
+  theta <- lambda*(1 - p)
   n <- length(data)
-  N_ml <- (n/((1 + p_ml)*(1 - dpois(0, theta_ml)))) %>%
+  N <- (n/(1 - dpois(0, theta))) %>%
     round()
-  return(N_ml)
+  return(N)
 }
 
-N_pp <- function(param_ml_optim, data = y) {
+N_pp <- function(par, data = y) {
   n <- length(data)
-  N_ml <- (n/(1 - dpois(0, param_ml_optim))) %>%
+  N <- (n/(1 - dpois(0, par))) %>%
     round()
-  return(N_ml)
+  return(N)
 }
 
-N_otpp <- function(param_ml_optim, data = y) {
+N_otpp <- function(par, data = y) {
   n <- length(data) - sum(data==1)
-  N_ml <- (n/(1 - dpois(0, param_ml_optim) - dpois(1, param_ml_optim))) %>%
+  N <- (n/(1 - dpois(0, par) - dpois(1, par))) %>%
     round()
-  return(N_ml)
+  return(N)
 }
 
 # Simulation
 
 sim_oipp <- function(lambda, p, m, n) {
-  simulations <- data.frame(N = rep(n, m)) %>%
+  simulations <- expand_grid(lambda = lambda, p = p, N = n, sim = 1:n_sim) %>% 
     rowwise() %>% 
-    mutate(sim = list(roipp(N, lambda, p)),
-           fit = list(oipp_ml_fit(data = sim)),
-           N_ml = N_oipp(fit$par))
+    mutate(data = list(tibble(y = roipp(N, lambda, p))), # Simulate data
+           fit = list(pp_ml_fit(data$y)), # Fit the MLE
+           N_est = N_pp(fit$par, data$y)) # Estimate population
   return(simulations)
 }
 
-sim_pp <- function(lambda, p, m, n) {
-  simulations <- data.frame(N = rep(n, m)) %>%
+sim_pp <- function(n, lambda, p, n_sim) {
+  simulations <- expand_grid(lambda = lambda, p = p, N = n, sim = 1:n_sim) %>% 
     rowwise() %>% 
-    mutate(sim = list(roipp(N, lambda, p)),
-           fit = pp_ml_fit(data = sim),
-           N_ml = N_pp(fit$par))
+    mutate(data = list(tibble(y = roipp(N, lambda, p))), # Simulate data
+           fit = list(pp_ml_fit(data$y)), # Fit the MLE
+           N_est = N_pp(fit$par, data$y)) # Estimate population
   return(simulations)
 }
 
-sim_otpp <- function(lambda, p, m, n) {
-  simulations <- data.frame(N = rep(n, m)) %>%
-    rowwise() %>% 
-    mutate(sim = list(tibble(y = roipp(N, lambda, p))),
-           fit = list(otpp_ml_fit(data = sim$y)),
-           N_ml = N_otpp(fit[[1]][1]))
-  return(simulations)
-}
 
 sim_otpp <- function(n, lambda, p, n_sim) {
   simulations <- expand_grid(lambda = lambda, p = p, N = n, sim = 1:n_sim) %>% 
     rowwise() %>% 
     mutate(data = list(tibble(y = roipp(N, lambda, p))), # Simulate data
            fit = list(otpp_ml_fit(data$y)), # Fit the MLE
-           N_est = N_otpp(fit$par, data$y)
-           )
+           N_est = N_otpp(fit$par, data$y)) # Estimate population
   return(simulations)
 }
+
+
+
+
+
 
 
 
@@ -236,7 +264,7 @@ sim_otpp <- function(n, lambda, p, n_sim) {
 
 #TESTER
 
-y <- roipp(1903, 8, 0.6)
+y <- roipp(2000, 8, 0)
 oipp_ml_fit()$par
 
 
@@ -252,6 +280,4 @@ N_otpp(par)
 
 test <- sim_otpp(n = 1000, lambda = 1:5, p = seq(from = 0, to = 0.5, by = 0.25), n_sim = 10)
 
-
-
-
+test <- sim_pp(n = 100, lambda = seq(from = 1, to = 10, by = 5), p = seq(from = 0, to = 0.1, by = 0.05), n_sim = 3)
