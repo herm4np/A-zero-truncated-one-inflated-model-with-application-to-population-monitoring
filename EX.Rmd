@@ -1,0 +1,31 @@
+---
+title: "EX"
+author: "Herman Persson"
+date: "null"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, include = FALSE)
+```
+
+# Introduktion
+
+Okänd inflation i data är inte det mest vanligt förekommande problemet då det ofta kan försummas eller helt förebyggas. Men om en existerande inflation inte uppmärksammas kan det få stora konskvenser på en statistisk analys
+
+Ett möjligt förekommande fel vid populationsskattning är att en redan observerad individ fel identifieras som en ny individ. Om detta fel förekommer så kommer den slutgiltiga datan innehålla falska observationer (spöken) som ger en inflation hos det antal individer som endast observerats en gång. 
+
+# Metod
+
+
+
+
+# Resultat 
+
+# Diskussion
+
+# Appendix
+
+# Referenser
