@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, error = FALSE)
 ```
 
 ```{r, include=FALSE}
@@ -148,6 +148,17 @@ PP_SIM %>%
   facet_grid(~N)
 ```
 
+```{r}
+P_SIM %>%
+  pivot_longer(c(N_est_oipp, N_est_otpp, N_est_pp), names_to = "type", values_to = "N_est") %>%
+  filter(type != "N_est_pp", p != 0.1, N == 900, lambda == 3)  %>%
+  mutate(type = str_remove(type, "N_est_") %>% toupper(), N_est_2 = N_est/N) %>%
+  arrange(N_est) %>%
+  group_by(p, N, lambda, type) %>%
+  summarise(N_mean_est = mean(N_est), conf_90 = paste0("[", c(N_est[950], N_est[50]) %>% toString(), "]"), conf_99 = paste0("[", c(N_est[990], N_est[10]) %>% toString(), "]"), sd = sqrt(var(N_est))) %>% 
+  knitr::kable()
+```
+
 ## One truncated and inflated positive poisson models
 
 To compare the population estimators of our one-inflated positive poisson (OIPP) and one-truncated positive poisson (OTPP) model we simulate 1000 times from all combinations for 3 different population sizes, inflation parameter values and underlying distrubution paramers. For each simulation the undelying population size is estimated using both the OIPP population estimator $N_{p_+1}$ and the OTPP population estimator $N_{p_++}$. The results of our simulations can be seen in figure ....
@@ -184,11 +195,14 @@ data_frame(year = c("All", 2015, 2016, 2017, 2019, 2020), data = list(data_summa
          par_ZTOINB = list(data %>% pull(n_obs) %>% ztoinb_ml_fit())[[1]][1],
          par_ZOTNB = list(data %>% pull(n_obs) %>% zotnb_ml_fit())[[1]][1],
          par_ZTNB = list(data %>% pull(n_obs) %>% ztnb_ml_fit())[[1]][1],
-         p_hat = par_ZTOINB[[3]] %>% round(7),
+         lambda_hat = par_ZTOINB[[1]] %>% round(2),
+         k_hat = par_ZTOINB[[2]] %>% round(2),
+         p_hat = par_ZTOINB[[3]] %>% round(2),
          N_ZTOINB = N_ztoinb(par_ZTOINB, data %>% pull(n_obs)),
          N_ZOTNB = N_zotnb(par_ZOTNB, data %>% pull(n_obs)),
          N_ZTNB = N_ztnb(par_ZTNB, data %>% pull(n_obs))) %>%
-  select(year, n, p_hat, N_ZTOINB, N_ZOTNB, N_ZTNB)
+  select(year, n, lambda_hat, k_hat, p_hat, N_ZTOINB, N_ZOTNB, N_ZTNB) %>%
+  knitr::kable()
 ```
 
 TABLE BELOW SHOWS QQ-PLOT OF BEAR DATA WITH REMOVED ONES COMPARED TO THEORETICAL QUANTILES OF NEGBIN DISTRUBUTION WITH PARAMATERS ESTIMATED BY ZOTNB model
