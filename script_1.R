@@ -359,8 +359,8 @@ qqplot_gen_2 <- function(data, type = 0) { # 0 for oiztnb estimate, 1 for zotnb
   size <- lambda*par[2] #lambda * k
   prob <- 1 - 1/(1 + par[2]) # 1/(1 + k/(1 - p))
   data_w_removed_ghosts <- data_obs[data_obs!=1] # remove all ones
-  nbin_q <- qnbinom(ppoints(100000), size, prob)
-  return(nbin_q[nbin_q > 1])
+  nbin_q <- qnbinom(ppoints(1000000), size, prob)
+  return(nbin_q[nbin_q >= 1])
 }
 
 # code for EX.Rmd
@@ -413,13 +413,15 @@ NB_SIM <- readRDS("NB_SIM2")[[1]]
 
 
 NB_SIM %>%
-  filter(k == 1) %>%
-  group_by(lambda, p, N) %>%
+  filter() %>%
+  group_by(lambda, p, N, k) %>%
   summarize(avg_N_est_percent_error = mean(N_est_ztoinb)/N) %>%
+  filter(N == 1500) %>%
   ggplot(aes(x = p, y = avg_N_est_percent_error, group = as.factor(lambda), color = as.factor(lambda))) +
-  geom_line() +
+  geom_line(alpha = 0.75) +
   scale_color_manual(values=c("red", "blue", "green")) +
-  facet_grid(~N)
+  scale_x_continuous(breaks = c(0, 0.1)) +
+  facet_wrap(~ k, scales = "free_y")
 
 sim_nb <- function(n, lambda, k, p, n_sim) {
   simulations <- expand_grid(lambda = lambda, k = k, p = p, N = n, sim = 1:n_sim) %>% 
@@ -427,16 +429,6 @@ sim_nb <- function(n, lambda, k, p, n_sim) {
     mutate(data = list(tibble(y = rztoinb(N, lambda, k, p))))
   return(simulations)
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
