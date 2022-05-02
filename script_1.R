@@ -399,38 +399,36 @@ data_summary_2020 <- data_captures %>%
 # set.seed(5118761)
 # P_SIM <- sim_p(c(500, 900, 1300), c(1,3,5), c(0, 0.1, 0.2), 1000)
 # set.seed(5118761)
-# P_SIM <- sim_p(c(500, 1500, 2500), c(1,2, 3), c(0, 0.05, 0.1), 1000)
+# P_SIM2 <- sim_p(c(500, 1500, 2500), c(1,2, 3), c(0, 0.05, 0.1), 1000)
 P_SIM <- readRDS("P_SIM2")[[1]]
 # set.seed(2844707)
 # PP_SIM <- sim_pp(c(500,900,1300), c(1,3,5), c(0, 0.025, 0.05), 1000)
-PP_SIM <- readRDS("PP_SIM")[[1]]
+# set.seed(5118761)
+# P_SIM2 <- sim_pp(c(500, 2500), c(1,2,3), seq(from =0, to =0.4,by = 0.1), 20)
+PP_SIM <- readRDS("PP_SIM2")[[1]]
 # set.seed(6556485)
 # NB_SIM <- sim_nb(c(500,1500,2500), c(1,2,3), c(0.2,0.6,1),  c(0, 0.05, 0.1), 1000)
 NB_SIM <- readRDS("NB_SIM2")[[1]]
+# set.seed(0911764)
+# NB_SIM_ext <- sim_zotnb(2500,c(1,2,3), 2, 0.1, 1000)
+NB_SIM_ext <- readRDS("NB_SIM_ext")[[1]]
 
 
 
 
 
-NB_SIM %>%
-  filter() %>%
-  group_by(lambda, p, N, k) %>%
-  summarize(avg_N_est_percent_error = mean(N_est_ztoinb)/N) %>%
-  filter(N == 1500) %>%
+
+
+PP_SIM %>%
+  filter(p < 0.2) %>%
+  group_by(lambda, p, N) %>%
+  summarize(avg_N_est_percent_error = mean(N_est)*100/N-100) %>%
+  filter(N %in% c(500, 2500)) %>%
   ggplot(aes(x = p, y = avg_N_est_percent_error, group = as.factor(lambda), color = as.factor(lambda))) +
-  geom_line(alpha = 0.75) +
-  scale_color_manual(values=c("red", "blue", "green")) +
-  scale_x_continuous(breaks = c(0, 0.1)) +
-  facet_wrap(~ k, scales = "free_y")
-
-sim_nb <- function(n, lambda, k, p, n_sim) {
-  simulations <- expand_grid(lambda = lambda, k = k, p = p, N = n, sim = 1:n_sim) %>% 
-    rowwise() %>% 
-    mutate(data = list(tibble(y = rztoinb(N, lambda, k, p))))
-  return(simulations)
-}
-
-
+  geom_line() +
+  scale_color_manual(values=c("red", "blue", "green"), name = expression(lambda)) +
+  facet_grid(~N) +
+  labs(x = "p", y = expression(paste("% error of mean ",bar(N))), fill = "")
 
 
 
@@ -447,9 +445,23 @@ sim_nb <- function(n, lambda, k, p, n_sim) {
 
 ### UPPDATERAD
 
-
+# NB_SIM %>%
+#   filter() %>%
+#   group_by(lambda, p, N, k) %>%
+#   summarize(avg_N_est_percent_error = mean(N_est_ztoinb)/N) %>%
+#   filter(N == 1500) %>%
+#   ggplot(aes(x = p, y = avg_N_est_percent_error, group = as.factor(lambda), color = as.factor(lambda))) +
+#   geom_line(alpha = 0.75) +
+#   scale_color_manual(values=c("red", "blue", "green")) +
+#   scale_x_continuous(breaks = c(0, 0.1)) +
+#   facet_wrap(~ k, scales = "free_y")
 # 
-# 
+# sim_nb <- function(n, lambda, k, p, n_sim) {
+#   simulations <- expand_grid(lambda = lambda, k = k, p = p, N = n, sim = 1:n_sim) %>% 
+#     rowwise() %>% 
+#     mutate(data = list(tibble(y = rztoinb(N, lambda, k, p))))
+#   return(simulations)
+# }
 # 
 # 
 # NB_SIM %>%
