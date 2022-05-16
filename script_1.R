@@ -410,7 +410,7 @@ PP_SIM <- readRDS("PP_SIM3")[[1]]
 
 # set.seed(6556485)
 # NB_SIM <- sim_nb(c(500,1500,2500), c(1,2,3), c(0.2,0.6,1),  c(0, 0.05, 0.1), 1000)
-NB_SIM <- readRDS("NB_SIM2")[[1]]
+NB_SIM <- readRDS("NB_SIM3")[[1]] 
 
 # set.seed(0911764)
 # NB_SIM_ext <- sim_zotnb(2500,c(1,2,3), 2, 0.1, 1000)
@@ -419,11 +419,12 @@ NB_SIM <- readRDS("NB_SIM2")[[1]]
 NB_SIM_ext <- readRDS("NB_SIM_ext2")[[1]]
 
 
-kaa <- NB_SIM %>%
-  mutate(size = fit_ztoinb[[1]][1]*fit_ztoinb[[1]][2], prob = (1 - 1/(1 + fit_ztoinb[[1]][2]/(1-fit_ztoinb[[1]][3]))),
-         N_est_ztoinb_2 = ((length(data$y) - 
-                             sum(data$y==1))/
-                             (1 - dnbinom(0, size, prob) - dnbinom(1, size, prob))) %>% round())
+# kaa <- NB_SIM %>%
+#   mutate(size = fit_ztoinb[[1]][1]*fit_ztoinb[[1]][2], prob = (1 - 1/(1 + fit_ztoinb[[1]][2]/(1-fit_ztoinb[[1]][3]))),
+#          N_est_ztoinb_2 = ((length(data$y) - 
+#                              sum(data$y==1))/
+#                              (1 - dnbinom(0, size, prob) - dnbinom(1, size, prob))) %>% round())
+
 P_SIM <- P_SIM %>%
   mutate(param = fit_oipp[[1]][1]*(1-fit_oipp[[1]][2]),
          N_est_oipp = ((length(data$y) - sum(data$y==1))/(1 - dpois(0, param) - dpois(1, param))) %>% round())
