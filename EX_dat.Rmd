@@ -1,0 +1,67 @@
+---
+title: "A zero-truncated one-inflated model with application to population monitoring: Simulations data"
+author: "Herman Persson"
+date: "`r format(Sys.time(), '%B %Y')`"
+output:
+  pdf_document:
+    fig_caption: yes
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE,warning=FALSE,message=FALSE,error=FALSE)
+```
+
+```{r, include=FALSE}
+library(tidyverse)
+source("script_1.R")
+```
+
+# ZTOIP simulations
+
+```{r}
+P_SIM %>%
+  pivot_longer(c(N_est_oipp, N_est_otpp, N_est_pp), names_to = "type", values_to = "N_est") %>%
+  mutate(set = 1,
+         type = str_remove(type, "N_est_") %>% 
+           toupper() %>%
+           str_replace("OIPP", "ZTOIP") %>%
+           str_replace("OTPP", "ZOTP") %>%
+           str_replace("PP", "ZTP"),
+         N_est_2 = N_est/N) %>%
+  full_join(PP_SIM %>%
+    mutate(set = 2,
+           N_est_2 = N_est/N, 
+           type = "ZTP")) %>%
+  arrange(N_est) %>%
+  group_by(set, type, p, N, lambda) %>%
+  summarise(n = n(),
+            N_mean_est = mean(N_est) %>% round(3), 
+            conf_90 = paste0("[", c(N_est[n()*0.05], N_est[n()*0.95]) %>% toString(), "]"), 
+            conf_99 = paste0("[", c(N_est[n()*0.01], N_est[n()*0.99]) %>% toString(), "]"), 
+            sd = sqrt(mean((N_est - N)^2)) %>% round(3)) %>%
+  ungroup() %>%
+  select(-set) %>%
+  knitr::kable(col.names = c("Type","$p$","$N$","$\\lambda$","n","$\\bar N$","90% CI","99% CI","RMSE"))
+```
+
+# ZTOINB simulations
+
+```{r}
+NB_SIM %>%
+  full_join(NB_SIM_ext %>% rename("fit_zotnb" = fit, "N_est_zotnb" = N_est)) %>%
+  pivot_longer(c(N_est_ztoinb, N_est_zotnb, N_est_ztnb), names_to = "type", values_to = "N_est") %>%
+  mutate(n = n(),
+         type = str_remove(type, "N_est_") %>% 
+           toupper(),
+         N_est_2 = N_est/N) %>%
+  arrange(type, p, N, lambda, k) %>%
+  group_by(type, p, N, lambda, k) %>%
+  summarise(N_mean_est = mean(N_est) %>% round(3), 
+            conf_90 = paste0("[", c(N_est[50], N_est[950]) %>% toString(), "]"), 
+            conf_99 = paste0("[", c(N_est[10], N_est[990]) %>% toString(), "]"), 
+            sd = sqrt(mean((N_est - N)^2)) %>% round(3)) %>%
+  drop_na() %>%
+  knitr::kable(col.names = c("Type","$p$","$N$","$\\lambda$","$k$","$\\bar N$","90% CI","99% CI","RMSE"))
+```
+

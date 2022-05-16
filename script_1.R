@@ -68,7 +68,7 @@ llztoinb <- function(param, data = y) {
   lambda <- param[1]
   p <- param[3]
   size <- lambda*param[2] #lambda * k
-  prob <- 1 - 1/(1 + param[2]/(1 - p)) # 1/(1 + k/(1 - p))
+  prob <- param[2]/(1 - p + param[2]) # 1/(1 + k/(1 - p)) = 1 - k/(1 - p + k)
   omega <- 1/(1 + lambda*p/(1 - dnbinom(0, size, prob)))
   l = sum(log((1 - omega) + omega*dnbinom(data[data==1], size, prob)/(1 - prob^size))) + # ll of ones
     sum(log(omega*dnbinom(data[data!=1], size, prob)/(1 - prob^size))) # ll of non ones
@@ -401,49 +401,51 @@ data_summary_2020 <- data_captures %>%
 # set.seed(5118761)
 # P_SIM2 <- sim_p(c(500, 1500, 2500), c(1,2, 3), c(0, 0.05, 0.1), 1000)
 P_SIM <- readRDS("P_SIM2")[[1]]
+
 # set.seed(2844707)
 # PP_SIM <- sim_pp(c(500,900,1300), c(1,3,5), c(0, 0.025, 0.05), 1000)
-# set.seed(5118761)
-# P_SIM2 <- sim_pp(c(500, 2500), c(1,2,3), seq(from =0, to =0.4,by = 0.1), 20)
-PP_SIM <- readRDS("PP_SIM2")[[1]]
+# set.seed(2844707)
+# PP_SIM3 <- sim_pp(c(500, 2500), c(1,2,3), seq(from =0, to =0.4,by = 0.1), 100)
+PP_SIM <- readRDS("PP_SIM3")[[1]]
+
 # set.seed(6556485)
 # NB_SIM <- sim_nb(c(500,1500,2500), c(1,2,3), c(0.2,0.6,1),  c(0, 0.05, 0.1), 1000)
 NB_SIM <- readRDS("NB_SIM2")[[1]]
+
 # set.seed(0911764)
 # NB_SIM_ext <- sim_zotnb(2500,c(1,2,3), 2, 0.1, 1000)
-NB_SIM_ext <- readRDS("NB_SIM_ext")[[1]]
+# set.seed(0911764)
+# NB_SIM_ext2 <- sim_zotnb(500,c(1,2,3), 2, 0.1, 1000)
+NB_SIM_ext <- readRDS("NB_SIM_ext2")[[1]]
 
 
-
-
-
-
-
-PP_SIM %>%
-  filter(p < 0.2) %>%
-  group_by(lambda, p, N) %>%
-  summarize(avg_N_est_percent_error = mean(N_est)*100/N-100) %>%
-  filter(N %in% c(500, 2500)) %>%
-  ggplot(aes(x = p, y = avg_N_est_percent_error, group = as.factor(lambda), color = as.factor(lambda))) +
-  geom_line() +
-  scale_color_manual(values=c("red", "blue", "green"), name = expression(lambda)) +
-  facet_grid(~N) +
-  labs(x = "p", y = expression(paste("% error of mean ",bar(N))), fill = "")
-
-
-
-
-
-
-
-
-
+kaa <- NB_SIM %>%
+  mutate(size = fit_ztoinb[[1]][1]*fit_ztoinb[[1]][2], prob = (1 - 1/(1 + fit_ztoinb[[1]][2]/(1-fit_ztoinb[[1]][3]))),
+         N_est_ztoinb_2 = ((length(data$y) - 
+                             sum(data$y==1))/
+                             (1 - dnbinom(0, size, prob) - dnbinom(1, size, prob))) %>% round())
+P_SIM <- P_SIM %>%
+  mutate(param = fit_oipp[[1]][1]*(1-fit_oipp[[1]][2]),
+         N_est_oipp = ((length(data$y) - sum(data$y==1))/(1 - dpois(0, param) - dpois(1, param))) %>% round())
 
 
 
 
 
 ### UPPDATERAD
+# PP_SIM %>%
+#   filter(p < 0.2) %>%
+#   group_by(lambda, p, N) %>%
+#   summarize(avg_N_est_percent_error = mean(N_est)*100/N-100) %>%
+#   filter(N %in% c(500, 2500)) %>%
+#   ggplot(aes(x = p, y = avg_N_est_percent_error, group = as.factor(lambda), color = as.factor(lambda))) +
+#   geom_line() +
+#   scale_color_manual(values=c("red", "blue", "green"), name = expression(lambda)) +
+#   facet_grid(~N) +
+#   labs(x = "p", y = expression(paste("% error of mean ",bar(N))), fill = "")
+# 
+
+
 
 # NB_SIM %>%
 #   filter() %>%
@@ -667,4 +669,65 @@ PP_SIM %>%
 #     nm*log(omega) + sum_data_m*log(theta) - nm*log(exp(theta) - 1) # log likelihood of non "1"s
 #   return(l)
 # }
+
+# In Table 2, we see how the variance for our estimator increases when we introduce different amounts of individual heterogeneity through $k$. We note that low values of $k$ in combination with lower values of $lambda$ result in high uncertainty and bias in the population estimates, but as both or one of the parameters increases in value, the population estimate stabilize.
+# 
+# From QQ-plots in Figure 4, we see that the data, largely, seems to fit well with the model with the only major difference being that the collected data appears to have a slightly thinner tail compared to the theoretical quantiles. The good fit is expected as the negative binomial model is very flexible. 
+# 
+# From the inflation parameter estimations $\hat{p}_{g_{+1}}$ in Table 3 we see no sign that bear data contain one-inflation as only one of the years contains more one-observations than expected. Even if inflation does not seem to exist, we can estimate the population with our different models and get an estimate of the size of the population in all regions for the different years. Since inflation does not seem to exist in data, $\hat{N}_{g_{+}}$ is the best estimator. Note, however, that these population estimates are very uncertain due to the observed variances and bias in in table 2 and as model assumptions are to some extent not met and a more complicated model accounting for more individual heterogeneity is required for reliable estimates. The problem of individual heterogeneity in capture-recapture can be read more about in @link2003nonidentifiability.
+# 
+# ----------------------------
+#   
+# It is possible that there is often an understanding of how a possible inflation value $p$ can arise and be distributed, especially in in the case of genotyping errors since there in many cases is possible to get a good understanding of what the probability of such an error can be based on the method used @pompanon2005genotyping. If we have a prior to our study have an understanding of our inflation parameter $p$, priori distributions can be of use. In @tuoto2022bayesian the problem of one-inflation is examined from a Bayesian Inference perspective and the methods used can be applied to our work in this report after possible adjustment to work with our different type of inflation.
+# 
+# 
+# In our first result from Figure 2 we see that for both our population sizes the bias of $\hat N_{p_+}$ grows exponentially as $p$ increases. We notice that the effect does not depend on the population size. As expected, the bias grows quicker for greater values of $\lambda$, this is of course since the extra ones then have a larger impact on the estimated underlying distribution parameter $\hat\lambda$. Its interesting to see that for an inflation as small as $0.05%$ we can already observe a bias of over $10\%$ for even our smallest lambda. 
+# 
+# In Figure 3 we can observe a great bias of the ZTOIP model for small values of $p$. The bias for $p = 0$ occurs since data in about half of the cases will contain more ones than expected, based on the remaining data. In these cases the ZTOIP likelihood maximum will be maximized for some $p>0$, which then leads to a lower population estimate. It is possible that this bias can be eliminated by expanding the model to allow negative bias values. One way of introducing negative bias can be seen in @godwin2017estimation where the link $\omega = \theta/(1+\theta)$ is used, however the approach would need to be adapted to be applicable in our case.
+# 
+# The problem of population estimation with one-inflation in data has been investigated before in reports such as @godwin2017estimation and @bohning2019identity. Even tough many of the methods used in the previous work prove useful in our case there is an essential difference. As an example, in our second reference Böhning and Heijden develop methods to estimate the total number of drunk drivers in Britain based on distribution for number of times each individual was caught by the police. The data of drunk drivers is naturally zero truncated and since most drivers who get caught by the police change their behavior, the data also includes one inflation. Hence the extra number of ones is generated as a consequence of behavioral change in some individuals the inflation value $p$ directly corresponds to the expected inflation generated by one individual. In the bear data one-inflation occur as consequence of genotyping errors. This means that each individual can give rise to as many extra ones as the number of times the individual was observed, since all its scat-samples with some probability $p$ might get incorrectly identified. This means that expected number of extra ones generated by each individual is $p$ multiplied by the expected number of observations. The other big difference is that in our case the base distribution is effected by $p$, where base distribution is the distribution of data when excluding extra ones. If @bohning2019identity disregards the extra ones, the remaining data follow the base distribution as the individuals whose behavior does not change are not affected by $p$. If we in our case disregarded the extra ones, the remaining data will not follow the base distribution as the extra ones were created at the expense of the number of observations of the real bears.
+# 
+# 
+# where $\hat{n}$ is the estimated number of real individuals observed. 
+# 
+# For each one of our models we want to create an estimate of the total population $N$, which includes all the unobserved individuals. We denote the number of observed individuals (ghosts included) as $n$ and estimate the total population in the zero-truncated models which ignore inflation with the Horvitz–Thompson estimator 
+# 
+# $$\hat{N}_{h_+} = \frac{n}{1-h(0)}.$$
+#   
+#   Where $h$ is our base distribution and $h_+$ is the corresponding zero-truncated distribution which ignores inflation. A similar estimator for our zero-one-truncated distributions will then be
+# 
+# $$\hat{N}_{h_{++}} = \frac{n-f_1}{1-h(0)-h(1)},$$
+#   where $f_1$ as before is the number of individuals observed once. Note that $\hat{N}_{h_{++}}$ is an unbiased estimator but that $\hat{N}_{h_{+}}$ only is unbiased for $p=0$. In the case of the zero-truncated one-inflated models we use the estimator
+# 
+# \begin{align}\hat{N}_{f_{+1}} = \frac{n - f_1 + \hat{n}_1}{1 - f(0)}\end{align}
+# 
+# where $\hat{n}_1$ is the estimated number of real individuals observed once, ie not including ghosts. In our zero-truncated one-inflted distrubutions the proportion of real individuals observed once is $\omega h_+(1,\theta)$ and the proportion of ghosts is $1 - \omega$. Our estimator for $\hat{n}_1$ is therefor
+# 
+# $$\hat{n}_1 = f_1\Bigg(\frac{h_{+1}(1) - \mathbb{P}(\textrm{"ghost"})}{h_{+1}(1)} \Bigg) = f_1 \frac{\hat{\omega} h_+(1)}{(1 - \hat{\omega}) + \hat{\omega} h_+(1)}$$
+#   
+#   which combined with (5) then gives us the estimator of $N_{h_{+1}}$ as
+# 
+# $$\hat{N}_{h_{+1}} = \frac{n - f_1\bigg(1 - \frac{\hat{\omega} h_+(1)}{(1 - \hat{\omega}) + \hat{\omega} h_+(1)}\bigg)}{1 - h(0)}.$$
+#   
+#   Note that under the assumption that our estimated number of true individuals observed once is unbiased, $\hat{N}_{f_{+1}}$ is an unbiased estimator.
+# 
+# 
+# If we denote the number of observations of value $i$ as $f_i$ and the highest observed value as $m$ we get the likelihood function 
+# 
+# $$L_{p_{+1}}(\lambda, p,x) = [(1- \omega) + p_+(1,\theta)]^{f_1} \prod_{i = 2}^{m} [\omega p_+(x_i,\theta)]^{f_i}.$$
+# 
+#   with the corresponding likelihood function 
+# 
+# $$L_{p_{++}}(\theta,x) = \prod_{i = 2}^{m} p_{++}(x_i,\theta)^{f_i}.$$
+#   and its corresponding likelihood is 
+# 
+# $$L_{p_+}(\theta,x) = \prod_{i = 1}^{m} p_{+}(x_i,\theta)^{f_i}.$$
+
+
+
+
+
+
+
+
 
