@@ -260,7 +260,7 @@ A summary from our analysis and comparison with other reports is that ghost infl
 
 # Appendix
 
-All the code used in the production of this report can be found at https://github.com/herm4np/A-zero-truncated-one-inflated-model-with-application-to-population-monitoring.
+All the code used in the production of this report can be found at https://github.com/herm4np/kandidat.
 
 ## (1) Derivation of $\omega$
 
