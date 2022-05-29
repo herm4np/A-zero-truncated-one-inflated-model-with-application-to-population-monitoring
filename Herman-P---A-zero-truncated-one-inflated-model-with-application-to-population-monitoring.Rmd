@@ -1,10 +1,12 @@
 ---
-title: "A zero-truncated one-inflated model with application to population monitoring"
-author: "Herman Persson"
-date: "`r format(Sys.time(), '%B %Y')`"
+# title: "A zero-truncated one-inflated model with application to population monitoring"
+# author: "Herman Persson"
+# date: "`r format(Sys.time(), '%B %Y')`"
+documentclass: report
 bibliography: references.bib
 output:
   pdf_document:
+    toc: true
     fig_caption: yes
   html_document: default
 ---
@@ -20,9 +22,9 @@ library(ggpubr)
 source("code.R")
 ```
 
-# Abstract
+<!-- # Abstract -->
 
-When one-inflation in data arises due to samples from individuals being misidentified as samples from non-existent with probability $p$, a large bias arises in the population estimate if the inflation is not taken into account. This inflation causes a greater bias compared to previously analysed inflation where it arises due to individuals with some probability $p_B$ succeed in deviating from being observed more than once (@bohning2019identity, @godwin2017one). By using distributions that take into account that data contains one-inflation of the type miss identification, we can reduce the bias. With the same parameters in a base distribution and $p = p_B$, inflation that arises due to incorrect identification is always expected to give greater bias and variance on the population estimate than the corresponding behavior caused inflation population estimate. When we apply our models to brown bear data from the department of Environmental Research and Monitoring at the Swedish Museum of Natural History we see no evidence of one-inflation and note that further analysis regarding individual heterogeneity of the bears is required for a reliable population estimate.
+<!-- When one-inflation in data arises due to samples from individuals being misidentified as samples from non-existent with probability $p$, a large bias arises in the population estimate if the inflation is not taken into account. This inflation causes a greater bias compared to previously analysed inflation where it arises due to individuals with some probability $p_B$ succeed in deviating from being observed more than once (@bohning2019identity, @godwin2017one). By using distributions that take into account that data contains one-inflation of the type miss identification, we can reduce the bias. With the same parameters in a base distribution and $p = p_B$, inflation that arises due to incorrect identification is always expected to give greater bias and variance on the population estimate than the corresponding behavior caused inflation population estimate. When we apply our models to brown bear data from the department of Environmental Research and Monitoring at the Swedish Museum of Natural History we see no evidence of one-inflation and note that further analysis regarding individual heterogeneity of the bears is required for a reliable population estimate. -->
 
 # Introduction
 
@@ -59,7 +61,7 @@ $$\hat{N} = \frac{n-n_1}{1-f(0,\hat{\theta})-f(1,\hat{\theta})}.$$
 
 In @bohning2019identity the estimator is further developed to count the extra ones, but in our case this is not desired as the extra ones does not represent real individuals. The estimator $\hat{N}$ is thus useful for both our zero-truncated one-inflated and zero-one-truncated models, that we shall derive later in this report. Hence, $\hat{N}$  will be used to estimate the population for these models in this report.
 
-## The poisson model
+## Poisson model
 
 There are many different ways to model the number of samples per individual. A common starting point in count data, where we will also begin, is to use a Poisson distributed number of samples per individual with no individual heterogeneity. Under this distribution, the number of samples from one individual is assumed to be independent of other individuals and the number of samples is assumed to be equally distributed for all individuals. We then have that the number of samples per individual is IID for all individuals according to $Y_i \sim \mathrm{Po}(\lambda)$. However, since our observed data will not contain the number of individuals for which $Y_i= 0$, the observed data will follow the zero-truncated Poisson distribution (ZTP, also called positive Poisson). If we now introduce one-inflation by assuming that each samples from all individuals with some probability $p\in (0,1)$ is incorrectly identified as a non-existent non-previously observed individual (ghost), then the number of observation per individual will be distributed according to $\mathrm{Bin}(Y_i, 1 - p)$ and as we are unable to distinguish real individuals from ghost individuals, our collected data will include $Y_i-\mathrm{Bin}(Y_i, 1 - p)$ ghost observations. Let us denote the PDF of the poisson distribution as $p(x,\lambda)$, the number of individuals observed $k$ times as $n_k$ and let 
 
@@ -77,7 +79,7 @@ E[n_1] &= E[\textrm{Bin}\bigg(\sum_{i=1}^N \mathrm{I}_{1}(Y_i), 1-p\bigg)] + E[\
 &=N(1-p)E[\mathrm{I}_{1}(Y_i)] + NpE[Y_i] \\
 &= (1-p)Np(1,\lambda)+Np\lambda \\
 &= Np(1,\lambda(1-p))+Np\lambda, \\
-E[n_k] &= Np(k,\lambda(1-p)), &k=2,3,...
+E[n_k] &= Np(k,\lambda(1-p)), &\textrm{for }k=2,3,...
 \end{align*}
 
 With this result we get the one-inflated zero-truncated poisson PDF denoted as $p_{+1}(x,\lambda,p)$ with
@@ -86,7 +88,7 @@ With this result we get the one-inflated zero-truncated poisson PDF denoted as $
 p_{+1}(1,\lambda,p) &= \frac{E[n_1]}{\sum_{k=1}^{\infty}E[n_k]} \\
 &= \frac{Np(1,\lambda(1-p))+Np\lambda}{N[\sum_{k=1}^{\infty}p(k,\lambda(1-p))]+Np\lambda}& \\
 &= \frac{p(1,\lambda(1-p))+p\lambda}{1-p(0,\lambda(1-p))+p\lambda},\\
-p_{+1}(k,\lambda,p) &= \frac{p(k,\lambda(1-p))}{1-p(0,\lambda(1-p))+p\lambda}, &k=2,3,...
+p_{+1}(k,\lambda,p) &= \frac{p(k,\lambda(1-p))}{1-p(0,\lambda(1-p))+p\lambda}, &\textrm{for }k=2,3,...
 \end{align*}
 
 Which as shown in Appendix (1) can be rewritten to resemble the distribution of previously analyzed inflation in i.a. @bohning2019identity with the help of the zero-truncated poisson PDF $p_+$ and $\omega = 1/(1+p\lambda/(1-p(0, \lambda)))$ as
@@ -101,21 +103,21 @@ As we know from the derivation of $p_{+1}$, we must adjust the distribution para
 
 $$p_{+}(x, \lambda) = \frac{p(x, \lambda)}{1- p(0,\lambda)} = \frac{\lambda^x}{(e^{\lambda}  - 1)x!}.$$
 
-## The negative binomial model
+## Negative binomial model
 
-All individuals being observed with the same probability is rarely the case. We are therefore very interested in introducing individual heterogeneity by allowing individual probability of observation. One way of introducing individual observation probability is by expanding our previous Poisson base distribution by letting the parameter for each individual be determined by a random variable. We choose to let the distribution parameter for individual $i$ denoted as $\lambda_i$ be distributed according to a Gamma distribution, more precisely $\lambda_i \sim \Gamma (k\lambda, k)$ where $\lambda_i$ is a random variable, $lambda$ is the expected value. In this distribution we are able to adjust for over dispersion by adjusting $k$. We can also introduce inflation as $\lambda_i (1 - p) \sim \Gamma (k\lambda, k/(1-p))$. In this distribution $E[\lambda_i(1-p)] = \lambda(1-p)$, $Var[\lambda_i(1-p)] = \lambda(1-p)^2/k$. Note that the distribution collapses to Po$(\lambda_i(1-p))$ as $k\to \infty$. By using the Gamma distribution to determine $\lambda_i$ we bring nice properties as we know from e.g. @wiki:Negative_binomial_distribution that for an arbitrary random variable $X$ it holds that 
+All individuals being observed with the same probability is rarely the case. We are therefore very interested in introducing individual heterogeneity by allowing individual probability of observation. One way of introducing individual observation probability is by expanding our previous Poisson base distribution by letting the parameter for each individual be determined by a random variable. We choose to let the distribution parameter for individual $i$ denoted as $\lambda_i$ be distributed according to a Gamma distribution, more precisely $\lambda_i \sim \Gamma (k\lambda, k)$ where $\lambda_i$ is a random variable, $\lambda$ is the expected value. In this distribution we are able to adjust for over dispersion by adjusting $k$. We can also introduce inflation as $\lambda_i (1 - p) \sim \Gamma (k\lambda, k/(1-p))$. In this distribution $E[\lambda_i(1-p)] = \lambda(1-p)$, $Var[\lambda_i(1-p)] = \lambda(1-p)^2/k$. Note that the distribution collapses to Po$(\lambda_i(1-p))$ as $k\to \infty$. By using the Gamma distribution to determine $\lambda_i$ we bring pleasant properties as we know from e.g. @wiki:Negative_binomial_distribution that for an arbitrary random variable $X$ it holds that 
 
 $$X \sim \Gamma (r, \frac{p}{1-p}) \hspace{5mm} \Rightarrow \hspace{5mm} \textrm{Po}(X) \stackrel{d}{=} \textrm{NBin}(r, p).$$
 
-If we apply the same theory to our case we see that
+Which when applied to our situation reveals that
 
 \begin{align} \lambda(1-p) \sim \Gamma(k\lambda, \frac{k}{1-p}) \hspace{5mm} \Rightarrow \hspace{5mm} \textrm{Po}( \lambda(1-p)) \stackrel{d}{=} \textrm{NBin}(k\lambda,\frac{k}{1-p+k}).\end{align}
 
-This means that the number of observations per individual is negative binomial distributed. Note that we can allow all $k > 0$ by using the extended negative binomial distribution which extends the binomial coefficient to all real-values using the gamma function. Let us denote the PDF of our base distribution $\textrm{NBin}(k\lambda,k/(1-p+k))$ from (3) as $g(x,\lambda,k,p)$. Similarly to the poisson models we want to construct two different models for estimating the total population; zero-truncated one-inflated negative binomial (ZTOINB) and zero-one-truncated negative binomial (ZOTNB). Just as before both the models will estimate the population with $\hat N$ but will estimate the parameters in different ways according to their respective distributions. In the ZOTNB model we get PDF
+This means that the number of observations per individual is negative binomial distributed. Note that we can allow all $k > 0$ by using the extended negative binomial distribution which extends the binomial coefficient to all real-values using the gamma function. Let us denote the PDF of our base distribution $\textrm{NBin}(k\lambda,k/(1-p+k))$ from (3) as $g(x,\lambda,k,p)$. Similarly to the poisson models we want to construct two different models for estimating the total population; zero-truncated one-inflated negative binomial (ZTOINB) and zero-one-truncated negative binomial (ZOTNB). In the ZOTNB model we get PDF
 
-$$g_{++}(x,\lambda, k, p)=\frac{g(x,\lambda,k,p)}{1-g(0,\lambda,k,p)-g(1,\lambda,k,p)}=\frac{\frac{\Gamma(x+k\lambda)}{x!\Gamma(k\lambda)}\Big(1- \frac{k}{1-p+k}\Big)^x}{\Big(\frac{k}{1+k-p}\Big)^{-k\lambda}-1-k\lambda\Big(1-\frac{k}{1+k-p}\Big)}.$$
+$$g_{++}(x,\lambda, k, p)=\frac{\frac{\Gamma(x+k\lambda)}{x!\Gamma(k\lambda)}\Big(1- \frac{k}{1-p+k}\Big)^x}{\Big(\frac{k}{1+k-p}\Big)^{-k\lambda}-1-k\lambda\Big(1-\frac{k}{1+k-p}\Big)}.$$
 
-As shown in Appendix (1), in the case of the ZTOINB model the PDF can be constructed similarly to the ZTOIP model using the zero-truncated Gamma distribution with the addition of $\omega = 1/(1+p\lambda/(1-g(0,\lambda,k,p)))$ to adjust the extra mass at 1. Hence, we have the ZTOINB PDF
+As shown in Appendix (1), in the case of the ZTOINB model the PDF can be constructed similarly to the ZTOIP model using the zero-truncated Gamma distribution $g_+$ with the addition of $\omega = 1/(1+p\lambda/(1-g(0,\lambda,k,p)))$ to adjust the extra mass at 1. Hence, we have the ZTOINB PDF
 
 $$g_{+1}(x,\lambda, k, p)=\begin{cases}(1-\omega)+\omega g_+(x,\lambda, k,p) \hspace{5mm}& \textrm{for } x = 1,\\ 
 \omega g_+(x,\lambda, k,p)  &\textrm{for } x = 2,3, ... \end{cases}$$
@@ -137,7 +139,7 @@ data_captures %>%
 
 ## Simulations
 
-All parameter estimates are calculated via the maximum likelihood method. Our zero-one-truncated and zero-truncated one-inflated models will both use $\hat N$ to estimate the population and our zero-truncated models, which does not take into account that data includes inflation, will use $\hat{N}_{HT}$. Since the likelihood functions of some of our models are unable to be maximized algebraically all likelihoods will be maximized numerically for the sake of comparability. An important note is the fact that the Negative Binomial model is rather unstable when using numerical maximization and therefore some non-existent trends might be visible for even very large simulations. A link to all the code used in the creation the simulations as well as a complete summary of the simulation results can be found in the Appendix. 
+All parameter estimates are calculated via the maximum likelihood method. Our zero-one-truncated and zero-truncated one-inflated models will both use $\hat N$ to estimate the population and our zero-truncated models, which does not take into account that data includes inflation, will use $\hat{N}_{HT}$. Since the likelihood functions of some of our models are unable to be maximized algebraically all likelihoods will be maximized numerically for the sake of comparability. An important note is the fact that the negative binomial model is rather unstable when using numerical maximization and therefore some non-existent trends might be visible for even very large simulations. A link to all the code used in the creation the simulations as well as a complete summary of the simulation results can be found in the Appendix. 
 
 # Results 
 
@@ -172,7 +174,11 @@ PP_SIM %>%
   knitr::kable(caption = "Percentage bias of $\\bar N _{ZTP}$ for diffrent inflation types as N = 500", col.names = c("$p/p_B$","$\\lambda$","$\\%$ bias of $\\bar N _{ZTP}$","Type"))
 ```
 
-To see how well our ZTOIP and ZOTP are able to estimate the population we simulate data from the ZTOIP distribution 1000 times for each combination of three different values for $N$, $\lambda$ and $p$. For each simulation the base distribution parameters are estimated using the ZTOIP, ZOTP and ZTP models and the population size is estimated with $\hat{N}_{HT}$ for ZTP and $\hat{N}$ for ZTOIP and ZOTP. To get an understanding of how the variance and bias differ between the ZTOIP and ZOTP population estimators we observe Table 2. In the table, together with the mean percent error, we see the root-mean-square error (RMSE) as well as $90\%$ and $99\%$ confidence intervals. The bounds of our two-sided confidence intervals are chosen from our population estimates and contains $90\%$ and $99\%$, respectively, of the estimates.
+To see how well our ZTOIP and ZOTP models are able to estimate the population we simulate data from the ZTOIP distribution 1000 times for each combination of three different values for $N$, $\lambda$ and $p$. For each simulation the base distribution parameters are estimated using the ZTOIP, ZOTP and ZTP models and the population size is estimated with $\hat{N}_{HT}$ for ZTP and $\hat{N}$ for ZTOIP and ZOTP. To get an understanding of how the variance and bias differ between the ZTOIP and ZOTP population estimators we observe Table 2. In the table, together with the mean percent error, we see the root-mean-square error (RMSE) as well as $90\%$ and $99\%$ confidence intervals. The bounds of our two-sided confidence intervals are chosen from our population estimates and contains $90\%$ and $99\%$, respectively, of the estimates.
+
+As we expand our model and introduce individual heterogeneity in the negative binomial distribution the effects of the population estimate as $\lambda$, $N$ and $p$ varies are unaltered (Appendix (3)). Therefore, we will focus on the consequences on our population estimates as $k$ varies. In Table 3 the mean percent error, RMSE and $90\%$ and $99\%$ confidence intervals can be seen for the ZOTNB population estimate of 1000 simulations repeated for different combinations of $\lambda$ and $k$. 
+
+\newpage
 
 ```{r}
 P_SIM %>%
@@ -191,9 +197,6 @@ P_SIM %>%
                col.names = c("Type","$p$","$\\bar N$","90% CI","99% CI","RMSE"))
 ```
 
-
-As we expand our model and introduce individual heterogeneity in the negative binomial distribution the effects of the population estimate as $\lambda$, $N$ and $p$ varies are unaltered (Appendix (3)). Therefore, we will focus on the consequences on our population estimates as $k$ varies. In Table 3 the mean percent error, RMSE and $90\%$ and $99\%$ confidence intervals can be seen for the ZOTNB population estimate of 1000 simulations repeated for different combinations of $\lambda$ and $k$. 
-
 ```{r}
 NB_SIM %>%
   pivot_longer(c(N_est_ztoinb, N_est_zotnb, N_est_ztnb), names_to = "type", values_to = "N_est") %>%
@@ -209,6 +212,8 @@ NB_SIM %>%
 ## Application on bear data
 
 Before we apply our models to bear data it is important that we get an understanding of how well bear data fits a negative binomial model. We do this by creating QQ-plots where we compare the distribution of our bear data, as seen in Figure 1, with the theoretical quantiles of a zero-truncated negative binomial (ZTNB) distribution with parameters estimated by the ZOTNB model. The result can be seen in Figure 3. It is important to notice that the data which consists of all years combined (All) does not meet the model assumptions to the same degree as one year separately since some bears have been observed during two different surveys and therefore have a much higher probability of being observed.
+
+In Table 4 the estimated underlying distribution parameters from the ZTOINB distribution are shown together with the estimated population size by all of our three negative binomial models.
 
 ```{r fig.cap="QQ-plot, bear data and theoretical NBin quantiles"}
 par(mfrow=c(2,3))
@@ -244,8 +249,6 @@ qqplot(qqplot_gen_2(data_summary_2020),
 abline(0, 1, col = 'red')
 ```
 
-In Table 4 the estimated underlying distribution parameters from the ZTOINB distribution are shown together with the estimated population size by all of our three negative binomial models.
-
 ```{r}
 tibble(year = c("All", 2015, 2016, 2017, 2019, 2020), data = list(data_summary, data_summary_2015, data_summary_2016, data_summary_2017, data_summary_2019, data_summary_2020)) %>%
   rowwise() %>%
@@ -277,9 +280,13 @@ It is possible that there often exists an understanding of how a possible inflat
 
 A summary from our analysis is that ghost inflation compared with behavioral inflation always leads to more uncertain population estimates when $p=p_B$ and the same base distribution is used. As mentioned previously an improvement of zero-truncated one-inflated estimates can be done by expanding the model to include deflation and such a model would in most scenarios be ideal. However, this improvement does not mean that population estimate in ghost inflation will be as good as in behavior inflation as the expected bias and error still will be higher using the same base distribution and when $p=p_B$. 
 
+\newpage
+
 # Appendix
 
 All the code used in the production of this report can be found at https://github.com/herm4np/A-zero-truncated-one-inflated-model-with-application-to-population-monitoring.
+
+\newpage
 
 ## (1) Derivation of $\omega$
 
@@ -302,17 +309,19 @@ f_{+1}(1)&=\frac{pE[Y_i]+(1-p)f(1)}{pE[Y_i] + \sum_{k=1}^{\infty}(1-p)f(k)}\\
 \Rightarrow \omega &=\frac{1}{1-\frac{pE[Y_i]}{1-f(0,p)}}.
 \end{align*}
 
+\newpage
+
 ## (2) Relative bias of mean population estimate
 
-ZTOIP (left) and ZOTP (right).
+Faceted with respect to $N$. ZTOIP (left) and ZOTP (right).
 
 ```{r}
 ggarrange(P_SIM %>%
             group_by(lambda, p, N) %>%
             summarize(avg_N_est_percent_error = mean(N_est_ztoip)*100/N-100) %>%
-            ggplot(aes(x = p, y = avg_N_est_percent_error, group = as.factor(lambda), color = as.factor(lambda))) +
-            geom_line() +
-            scale_color_manual(values=c("red", "blue", "green"), name = expression(paste(lambda, ":"))) +
+            ggplot(aes(x = p, y = avg_N_est_percent_error, group = as.factor(lambda))) +
+            geom_line(aes(linetype=as.factor(lambda))) +
+            scale_linetype_manual(values=c("dotted", "twodash", "solid"), name = expression(paste(lambda, ":"))) +
             facet_grid(~N) +
             ylim(c(-6.2, 6.2)) +
             labs(x = "p", y = expression(paste("% bias of ", bar(N))), fill = "") + 
@@ -322,9 +331,9 @@ ggarrange(P_SIM %>%
           P_SIM %>%
             group_by(lambda, p, N) %>%
             summarize(avg_N_est_percent_error = mean(N_est_zotp)*100/N-100) %>%
-            ggplot(aes(x = p, y = avg_N_est_percent_error, group = as.factor(lambda), color = as.factor(lambda))) +
-            geom_line() +
-            scale_color_manual(values=c("red", "blue", "green"), name = expression(paste(lambda, ":"))) +
+            ggplot(aes(x = p, y = avg_N_est_percent_error, group = as.factor(lambda))) +
+            geom_line(aes(linetype=as.factor(lambda))) +
+            scale_linetype_manual(values=c("dotted", "twodash", "solid"), name = expression(paste(lambda, ":"))) +
             facet_grid(~N) +
             ylim(c(-6.2, 6.2)) +
             labs(x = "p", y = "", fill = "") + 
@@ -334,6 +343,8 @@ ggarrange(P_SIM %>%
             theme_bw(),
           common.legend = TRUE)
 ```
+
+\newpage
 
 ## (3) Log-bias of NBin population estimates 
 
@@ -345,15 +356,17 @@ NB_SIM %>%
   mutate(type = str_remove(type, "N_est_") %>% toupper()) %>%
   group_by(lambda, p, k, type) %>%
   summarize(avg_N_est_percent_error = mean(log(N_est)*100/log(N)-100)) %>%
-  ggplot(aes(x = p, y = avg_N_est_percent_error, group = as.factor(lambda), color = as.factor(lambda))) +
-    geom_line() +
-    scale_color_manual(values=c("red", "blue", "green"), name = expression(paste(lambda, ":"))) +
+  ggplot(aes(x = p, y = avg_N_est_percent_error, group = as.factor(lambda))) +
+    geom_line(aes(linetype=as.factor(lambda))) +
+    scale_linetype_manual(values=c("dotted", "twodash", "solid"), name = expression(paste(lambda, ":"))) +
     facet_grid(type~k, scales ="free_y") +
     labs(x = "p", y = expression(paste("% bias of log(",bar(N), ")")), fill = "")+
     theme(legend.position = "top") +
     scale_x_continuous(breaks = c(0, 0.05, 0.1)) +
     theme_bw()
 ```
+
+\newpage
 
 ## (4) Histogram of $\hat{p}$
 
@@ -369,6 +382,8 @@ P_SIM %>%
     theme_bw()
 ```
 
+\newpage
+
 ## (5) Comparison of base distribution NBin and Po
 
 Poisson distribution shown in grey, extra ones excluded, $\lambda = 2$ and $p = 0.1$. Faceted horizontally with respect to $k$.
@@ -381,18 +396,16 @@ tibble("Poisson" = qpois(ppoints(1000), lambda = 2*(1 - 0.1)),
        "k_2" = qnbinom(ppoints(1000), size = 2*2, prob = 2/(1 - 0.1 + 2))) %>%
   pivot_longer(-c(Poisson), names_to = "type", values_to = "q") %>%
   ggplot() + 
-    geom_histogram(mapping = aes(x = Poisson, y = ..count../1000), 
-                  bins = 16, alpha = 0.7,
-                  fill = "gray40", size = 0.5) + 
-    geom_histogram(mapping = aes(x = q, y = ..count../1000, 
-                            color = type, fill = type), 
-              stat = "bin", bins = 16, size = 0.5,
-              alpha = 0.7) + 
-    guides(color = "none", fill = "none") + 
+    geom_histogram(aes(x = Poisson, y = ..count../1000), 
+                  bins = 16, alpha = 0.7, size = 0.5) + 
+    geom_histogram(mapping = aes(x = q, y = ..count../1000), 
+              stat = "bin", bins = 16, size = 0.5, alpha = 0.3, fill = "red") + 
+    guides(fill = "none") + 
     labs(x = "Observations", y = "Density") + 
     xlim(c(0, 15)) +
     ylim(c(0, 0.3)) +
-    facet_wrap(~ type, nrow = 1, labeller= as_labeller(c(k_0.2="0.2", k_0.6="0.6", k_1="1", k_2="2")))
+    facet_wrap(~ type, nrow = 1, labeller= as_labeller(c(k_0.2="0.2", k_0.6="0.6", k_1="1", k_2="2"))) +
+    theme_bw()
 ```
 
 # References
